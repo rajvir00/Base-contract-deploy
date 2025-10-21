@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract UniqueTxLogger {
+    event UniqueTransaction(address indexed sender, bytes32 uniqueId, string purpose, uint256 timestamp);
+
+    function logTransaction(string calldata purpose) external {
+        bytes32 uniqueId = keccak256(abi.encodePacked(msg.sender, block.timestamp, purpose));
+        emit UniqueTransaction(msg.sender, uniqueId, purpose, block.timestamp);
+    }
+}
