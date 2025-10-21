@@ -1,171 +1,86 @@
 # Base-contract-deploy
 Contract deploy on Base Mainnet
 
-1️⃣ BasicMath.sol
+# 🧠 Safe Solidity Contracts Collection
 
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+This repository contains **five secure and minimal Solidity contracts** designed for safe deployment, learning, and ecosystem building (e.g., Base, Ethereum, or Layer2 environments).
 
-contract BasicMath {
-    uint256 constant MAX_INT = type(uint256).max;
+All contracts use **Solidity ^0.8.0**, which includes built-in overflow/underflow protection.
 
-    // Event for unique transaction tracking
-    event MathExecuted(address indexed sender, string operation, uint256 a, uint256 b, uint256 result, uint256 timestamp);
+---
 
-    function adder(uint256 _a, uint256 _b) external returns (uint256 sum, bool error) {
-        if (_b > MAX_INT - _a) {
-            emit MathExecuted(msg.sender, "add", _a, _b, 0, block.timestamp);
-            return (0, true); // Overflow occurred
-        }
-        uint256 result = _a + _b;
-        emit MathExecuted(msg.sender, "add", _a, _b, result, block.timestamp);
-        return (result, false);
-    }
+## 🔢 Contract List
 
-    function subtractor(uint256 _a, uint256 _b) external returns (uint256 difference, bool error) {
-        if (_b > _a) {
-            emit MathExecuted(msg.sender, "sub", _a, _b, 0, block.timestamp);
-            return (0, true); // Underflow occurred
-        }
-        uint256 result = _a - _b;
-        emit MathExecuted(msg.sender, "sub", _a, _b, result, block.timestamp);
-        return (result, false);
-    }
-}
+1️⃣ **BasicMath.sol** — Safe arithmetic operations with manual overflow/underflow checks  
+2️⃣ **SafeMathPlus.sol** — Enhanced math contract with revert protection and events  
+3️⃣ **SafeStore.sol** — Secure owner-only key/value storage  
+4️⃣ **SafeVault.sol** — Simple ETH deposit & withdrawal vault with reentrancy safety  
+5️⃣ **UniqueTxLogger.sol** — Generates unique transaction IDs for on-chain tracking  
 
+---
 
-2️⃣ SafeMathPlus.sol — Enhanced Math With Overflow Logs
+## ⚙️ Deployment Guide (via Remix)
 
-Use: Safely handle math with logging and reverts.
+### 🪄 Step-by-Step
 
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+1️⃣ **Open Remix IDE**  
+🔗 [https://remix.ethereum.org](https://remix.ethereum.org)
 
-contract SafeMathPlus {
-    event SafeAdd(address indexed sender, uint256 a, uint256 b, uint256 result);
-    event SafeSub(address indexed sender, uint256 a, uint256 b, uint256 result);
+2️⃣ **Create a new file**  
+- Name it after the contract you want (e.g., `SafeVault.sol`)  
+- Paste the contract code inside  
 
-    function add(uint256 a, uint256 b) external pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "Overflow occurred");
-        return c;
-    }
+3️⃣ **Compile**  
+- Go to the Solidity Compiler tab (📘 icon)  
+- Select **version 0.8.0 or higher**  
+- Click **Compile**
 
-    function sub(uint256 a, uint256 b) external pure returns (uint256) {
-        require(b <= a, "Underflow occurred");
-        return a - b;
-    }
-}
+4️⃣ **Deploy**  
+- Go to the **Deploy & Run Transactions** tab (🚀 icon)  
+- Environment → **Injected Provider (MetaMask)**  
+- Connect wallet  
+- Choose **Base Mainnet** or **Base Sepolia**  
+- Click **Deploy** and confirm in MetaMask  
 
+5️⃣ **Verify on BaseScan**  
+- Go to [https://basescan.org](https://basescan.org)  
+- Paste your contract address  
+- Verify your deployment and view events/logs  
 
-✅ Safe
-✅ Pure math operations
-✅ Uses Solidity’s built-in safety
-✅ Emits events for transparency
+---
 
-3️⃣ SafeStore.sol — Secure Key/Value Storage With Owner Control
+## 🔐 Safety Overview
 
-Use: Safely store and retrieve data with ownership protection.
+| Contract | Handles Funds | Reentrancy Safe | Owner Protected | Emits Logs | Suitable for Main Wallet |
+|-----------|----------------|------------------|------------------|-------------|---------------------------|
+| **BasicMath.sol** | ❌ | ✅ | ❌ | ✅ | ✅ |
+| **SafeMathPlus.sol** | ❌ | ✅ | ❌ | ✅ | ✅ |
+| **SafeStore.sol** | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **SafeVault.sol** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **UniqueTxLogger.sol** | ❌ | ✅ | ❌ | ✅ | ✅ |
 
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+All contracts are **self-contained**, **no external dependencies**, and **safe to deploy** from your main wallet.
 
-contract SafeStore {
-    address public owner;
-    mapping(string => uint256) private data;
+---
 
-    event DataUpdated(string key, uint256 value);
-    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
+## 🧮 Contract Descriptions
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
+### 1️⃣ BasicMath.sol
+Performs simple addition and subtraction with manual overflow and underflow detection.
 
-    constructor() {
-        owner = msg.sender;
-    }
+### 2️⃣ SafeMathPlus.sol
+Extends math operations using Solidity’s built-in safety and emits events for transparency.
 
-    function setValue(string calldata key, uint256 value) external onlyOwner {
-        data[key] = value;
-        emit DataUpdated(key, value);
-    }
+### 3️⃣ SafeStore.sol
+Allows secure storage and retrieval of values by the contract owner only.
 
-    function getValue(string calldata key) external view returns (uint256) {
-        return data[key];
-    }
+### 4️⃣ SafeVault.sol
+Receives and holds ETH deposits safely, allowing the owner to withdraw securely.
 
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Zero address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-    }
-}
+### 5️⃣ UniqueTxLogger.sol
+Generates unique transaction IDs (`keccak256` hashes) with timestamp-based logging for traceability.
 
-
-✅ Safe
-✅ Owner-only modification
-✅ Transparent logs
-✅ Cannot be hijacked or exploited
-
-4️⃣ SafeVault.sol — ETH Deposit/Withdraw With Safety Checks
-
-Use: Securely hold and withdraw ETH (no reentrancy risk).
-
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract SafeVault {
-    address public owner;
-
-    event Deposit(address indexed user, uint256 amount);
-    event Withdraw(address indexed user, uint256 amount);
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    receive() external payable {
-        emit Deposit(msg.sender, msg.value);
-    }
-
-    function withdraw(uint256 amount) external onlyOwner {
-        require(amount <= address(this).balance, "Insufficient balance");
-        payable(owner).transfer(amount);
-        emit Withdraw(owner, amount);
-    }
-
-    function getBalance() external view returns (uint256) {
-        return address(this).balance;
-    }
-}
-
-
-✅ Safe for deposits
-✅ No reentrancy
-✅ Owner-only withdrawal
-✅ Emits all actions
-
-5️⃣ UniqueTxLogger.sol — Creates Unique Transaction Records
-
-Use: Log unique transaction IDs with hash & timestamp.
-
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract UniqueTxLogger {
-    event UniqueTransaction(address indexed sender, bytes32 uniqueId, string purpose, uint256 timestamp);
-
-    function logTransaction(string calldata purpose) external {
-        bytes32 uniqueId = keccak256(abi.encodePacked(msg.sender, block.timestamp, purpose));
-        emit UniqueTransaction(msg.sender, uniqueId, purpose, block.timestamp);
-    }
-}
+---
 
 
 ✅ Each call generates a unique transaction hash (ID)
